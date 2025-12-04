@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register — Coding Club</title>
+  <style>
+    :root{
+      --gradient:linear-gradient(245deg, rgba(32,186,181,1) 0%, rgba(255,212,56,1) 100%);
+      --card:#14635f; /* deep teal */
+      --border:#ffe89a;
+      --ink:#fff;
+      --muted:#ffe89a;
+      --primary:#ffd438; /* golden accent for main buttons */
+      --accent:#20bab5;  /* teal accent for save button */
+      --ok-bg:#DFF3C4; --ok-bd:#93C572; --ok-fg:#2F6F3E;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--gradient);
+    }
+    .shell{max-width:860px;margin:16px auto;padding:0 12px}
+    header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--ink)}
+    h1{margin:0;font-size:22px}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:none;border-radius:999px;
+      background:var(--primary);color:#333;font-weight:700;cursor:pointer;text-decoration:none
+    }
+    .btn.ghost{background:#ffe89a;color:#111}
+    .btn.refresh{background:#20bab5;color:#fff}
+    .btn.refresh.spin{animation:spin .6s linear 1}
+    .btn.view{background:#111827;color:#fff}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+          box-shadow:0 10px 24px rgba(0,0,0,.25);padding:14px;color:var(--ink)}
+
+    .hint{font-size:12px;color:var(--muted)}
+    label{display:block;font-weight:600;margin:10px 0 6px}
+    input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;
+                          font-size:14px;background:#fffbeb}
+    textarea{min-height:90px;resize:vertical}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+
+    table{width:100%;border-collapse:collapse;color:var(--ink)}
+    th,td{padding:8px;border-bottom:1px solid #ffe89a;text-align:left;font-size:13px}
+    thead th{background:#14635f;color:var(--ink)}
+    .tag{display:inline-block;background:#ffd43833;color:#ffd438;border:1px solid #ffd43866;padding:2px 8px;border-radius:999px;font-size:12px}
+
+    /* feedback messages */
+    .msg{margin-top:10px;font-size:14px;border-radius:10px;padding:10px;border:1px solid transparent}
+    .msg.ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-fg);font-weight:800}
+    .msg.err{color:#7f1d1d;background:#fef2f2;border-color:#fecaca;font-weight:700}
+
+    /* Modal (popup) */
+    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .backdrop.show{display:flex}
+    .modal{width:min(860px,96vw);background:#14635f;color:var(--ink);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;border:1px solid var(--border)}
+    .modal header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#20bab5;color:#fff;border-bottom:1px solid #ffe89a}
+    .modal h3{margin:0;font-size:16px}
+    .modal .inner{padding:10px 14px}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #ffe89a;background:#ffd43822}
+    .btn.save{background:var(--accent);color:#fff}
+    .btn.clear{background:#ef4444;color:#fff}
+    .btn.close{background:#94a3b8;color:#fff}
+    .timer{font-size:12px;color:#ffe89a;margin-left:auto}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <h1>Registration</h1>
+      <div class="row">
+        <a href="Wilson-Coding-Club-Page.html" class="btn ghost">Wilson’s Coding Club</a>
+        <a class="btn ghost" href="comment.html" target="_blank" rel="noopener">Comment</a>
+        <button id="refresh" class="btn refresh" type="button" title="Refresh list (no page reload)">↻ Refresh</button>
+      </div>
+    </header>
+
+    <!-- Form -->
+    <section class="card" aria-label="Register form">
+      <p>Please fill in your details and click <b>Save</b>. A popup will show your record; you can Save, Clear, or Close it.</p>
+
+      <form id="registerForm" novalidate>
+        <!-- form fields here -->
+      </form>
+    </section>
+
+    <!-- View registrations (only LAST record) -->
+    <div class="row" style="justify-content:center;margin:10px 0 6px">
+      <button id="toggleList" class="btn view" type="button" aria-controls="listSection" aria-expanded="false">
+        View last registration
+      </button>
+    </div>
+
+    <!-- List (hidden by default) -->
+    <section id="listSection" class="card" aria-label="Saved registrations" style="margin-top:8px; display:none">
+      <h2 style="margin:0 0 8px">
+        Latest Registration <span id="count" class="tag">0 total</span>
+      </h2>
+      <div style="overflow:auto; max-height:45vh">
+        <table aria-describedby="count">
+          <thead>
+            <tr>
+              <th>First</th>
+              <th>Last</th>
+              <th>Student ID</th>
+              <th>Grade</th>
+              <th>Email</th>
+              <th>Message</th>
+              <th>Saved At</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="hint">No registrations yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Popup (preview) -->
+  <div id="popup" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+    <div class="modal">
+      <header>
+        <h3 id="popupTitle">Saved Record (preview)</h3>
+        <span id="timer" class="timer">Auto-closing in 10s…</span>
+      </header>
+      <div class="inner">
+        <div style="overflow:auto;max-height:50vh">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th>First</th><th>Last</th><th>Student ID</th><th>Grade</th><th>Email</th><th>Message</th><th>Saved At</th>
+              </tr>
+            </thead>
+            <tbody id="popupBody">
+              <tr><td colspan="7" class="hint" style="padding:10px">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="popupClear"  class="btn clear">Clear</button>
+        <button id="popupSave"   class="btn save">Save</button>
+        <button id="popupClose"  class="btn close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Your JavaScript goes here -->
+</body>
+</html>
